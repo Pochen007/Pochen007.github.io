@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>您的網頁標題</title>
+    <style>
+        /* 通用的 CSS 樣式 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+        }
+        table td {
+            padding: 5px; /* 减少上下左右边距 */
+            text-align: center;
+            width: 20%;
+            position: relative;
+        }
+        .compressed-image-container {
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            padding-bottom: 100%;
+        }
+        .compressed-image {
+            max-width: 70%;
+            max-height: 70%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            cursor: pointer;
+            width: 100%;
+        }
+        .compressed-image2 {
+            max-width: 30%;
+            max-height: 30%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            cursor: pointer;
+            width: 100%;
+        }
+        .image-description {
+            text-align: center;
+        }
+        .image-description-left {
+            text-align: left;
+        }
+        .full-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+        .full-image img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+        h1 {
+            text-align: center; /* 文本居中 */
+            font-size: 52px; /* 更改字体大小为52px */
+        }
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #D5D18A;
+    }
+   </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+    <script>
+      var canvas;
+      var context;
+      var W;
+      var H;
+
+      var R = 6;
+      var points = [];
+      var randomPoints = [];
+      var staticPoints = [];
+
+      var B = 5;
+      var N = 10;
+
+      var bb = 3;
+      var BB = 7;
+      var NN = 4;
+
+      var bbb = 2;
+      var BBB = 4;
+      var NNN = 3;
+
+      window.onresize = setDimensions;
+
+      window.onload = function() {
+
+        canvas = document.getElementById('canvas');
+        context = canvas.getContext('2d');
+
+        for (var i = 0; i < N; i++) {
+          points[i] = [];
+          randomPoints[i] = [];
+          staticPoints[i] = [];
+        }
+
+        setDimensions();
+
+      }
+
+      function setDimensions() {
+        W = window.innerWidth;
+        H = window.innerHeight;
+        canvas.width = W;
+        canvas.height = H;
+        update();
+      }
+
+      function bigPaths(B, N) {
+        for (var i = 0; i < B; i++) {
+          var w1 = i * (W / B) - randomVal(0, 40);
+          var w2 = (i + 1) * (W / B) + randomVal(0, 40);
+
+          getPoints(w1, w2, 0, H, N);
+          drawCircuit(N, '#8F945C');
+        }
+      }
+
+      function mediumPaths(b, B, N) {
+        for (var i = 0; i < B; i++) {
+          for (var j = 0; j < b; j++) {
+            var w1 = i * (W / B) - randomVal(0, 40);
+            var w2 = (i + 1) * (W / B) + randomVal(0, 40);
+            var h1 = j * (H / b) + randomVal(0, 20);
+            var h2 = (j + 1) * (H / b) - randomVal(0, 20);
+
+            getPoints(w1, w2, h1, h2, N);
+            drawCircuit(N, '#525C44');
+          }
+        }
+      }
+
+      function smallPaths(b, B, N) {
+        for (var i = 0; i < B; i++) {
+          for (var j = 0; j < b; j++) {
+            var w1 = i * (W / B) + randomVal(0, 100);
+            var w2 = (i + 1) * (W / B) - randomVal(0, 100);
+            var h1 = j * (H / b) + randomVal(0, 40);
+            var h2 = (j + 1) * (H / b) - randomVal(0, 40);
+
+            getPoints(w1, w2, h1, h2, N);
+            drawCircuit(N, '#283227');
+          }
+        }
+      }
+
+      function getPoints(W1, W2, H1, H2, N) {
+
+        var width = W2 - W1;
+        var height = H2 - H1;
+
+        for (var j = 0; j < 2; j++) {
+          for (var i = 0; i < N; i++) {
+
+            var w1 = j * (width / 2) + W1;
+            var w2 = (j + 1) * (width / 2) + W1;
+            var h1 = i * (height / N) + H1;
+            var h2 = (i + 1) * (height / N) + H1;
+
+            points[i][j] = randomPoz(w1, w2, h1, h2);
+
+            randomPoints[i][j] = randomPoz(w1, w2, h1, h2);
+
+            var x = randomPoints[i][j].x - points[i][j].x;
+            var y = randomPoints[i][j].y - points[i][j].y;
+            var angle = Math.atan2(y, x);
+            var X = points[i][j].x - 20 * Math.cos(angle);
+            var Y = points[i][j].y - 20 * Math.sin(angle);
+
+            staticPoints[i][j] = new Point(X, Y);
+          }
+        }
+      }
+
+      function Point(x, y) {
+        this.x = x;
+        this.y = y;
+        this.r = R;
+        this.color = '#ff0000';
+
+        this.draw = function() {
+          context.beginPath();
+          context.globalAlpha = 0.7;
+          context.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+          context.fillStyle = this.color;
+          context.fill();
+          context.globalAlpha = 1;
+        };
+      }
+
+      function randomPoz(w1, w2, h1, h2) {
+        var x = randomVal(w1, w2);
+        var y = randomVal(h1, h2);
+        var p = new Point(x, y);
+        return p;
+      }
+
+      function drawCircuit(N, color) {
+        context.beginPath();
+        context.moveTo(points[0][0].x, points[0][0].y);
+
+        for (var i = 0; i < N; i++) {
+          if (i == N - 1) {
+            context.bezierCurveTo(staticPoints[i][0].x, staticPoints[i][0].y, randomPoints[i][1].x, randomPoints[i][1].y, points[i][1].x, points[i][1].y);
+          } else {
+            context.bezierCurveTo(staticPoints[i][0].x, staticPoints[i][0].y, randomPoints[i + 1][0].x, randomPoints[i + 1][0].y, points[i + 1][0].x, points[i + 1][0].y);
+          }
+        }
+
+        for (var i = N - 1; i >= 0; i--) {
+          if (i == 0) {
+            context.bezierCurveTo(staticPoints[i][1].x, staticPoints[i][1].y, randomPoints[i][0].x, randomPoints[i][0].y, points[i][0].x, points[i][0].y);
+          } else {
+            context.bezierCurveTo(staticPoints[i][1].x, staticPoints[i][1].y, randomPoints[i - 1][1].x, randomPoints[i - 1][1].y, points[i - 1][1].x, points[i - 1][1].y);
+          }
+        }
+
+        context.fillStyle = color;
+        context.lineWidth = 2;
+        context.fill();
+      }
+
+      function randomVal(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      function update() {
+        context.clearRect(0, 0, W, H);
+        bigPaths(B, N);
+        mediumPaths(bb, BB, NN);
+        smallPaths(bbb, BBB, NNN);
+      }
+    </script>
+    <div class="container">
+        <table>
+            <tr>
+                <td td style="font-family: Arial; font-size: 50px; font-weight: bold; text-align: center; vertical-align: middle; background-color: rgba(255, 255, 255, 0.4);">
+                    <p>這裡是大標題</p>
+                </td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>順序</p>
+                </td>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>圖鑑</p>
+                    <p>（點擊縮圖可預覽大圖）</p>			
+                </td>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>說明</p>
+                </td>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>拍攝者</p>
+                </td>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>下載連結</p>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲1</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙1')">
+                        <img class="compressed-image" src="乙1">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙1</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁1">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙1" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲2</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙2')">
+                        <img class="compressed-image" src="乙2">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙2</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁2">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙2" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲3</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙3')">
+                        <img class="compressed-image" src="乙3">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙3</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁3">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙3" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲4</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙4')">
+                        <img class="compressed-image" src="乙4">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙4</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁4">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙4" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲5</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙5')">
+                        <img class="compressed-image" src="乙5">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙5</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁5">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙5" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲6</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙6')">
+                        <img class="compressed-image" src="乙6">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙6</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁6">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙6" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲7</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙7')">
+                        <img class="compressed-image" src="乙7">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙7</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁7">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙7" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲8</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙8')">
+                        <img class="compressed-image" src="乙8">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙8</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁8">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙8" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲9</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙9')">
+                        <img class="compressed-image" src="乙9">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙9</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁9">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙9" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲10</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙10')">
+                        <img class="compressed-image" src="乙10">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙10</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁10">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙10" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲11</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙11')">
+                        <img class="compressed-image" src="乙11">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙11</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁11">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙11" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲12</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙12')">
+                        <img class="compressed-image" src="乙12">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙12</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁12">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙12" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲13</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙13')">
+                        <img class="compressed-image" src="乙13">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙13</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁13">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙13" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲14</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙14')">
+                        <img class="compressed-image" src="乙14">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙14</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁14">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙14" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲15</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙15')">
+                        <img class="compressed-image" src="乙15">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙15</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁15">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙15" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲16</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙16')">
+                        <img class="compressed-image" src="乙16">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙16</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁16">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙16" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲17</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙17')">
+                        <img class="compressed-image" src="乙17">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙17</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁17">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙17" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲18</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙18')">
+                        <img class="compressed-image" src="乙18">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙18</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁18">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙18" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲19</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙19')">
+                        <img class="compressed-image" src="乙19">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙19</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁19">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙19" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲20</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙20')">
+                        <img class="compressed-image" src="乙20">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙20</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁20">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙20" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲21</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙21')">
+                        <img class="compressed-image" src="乙21">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙21</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁21">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙21" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲22</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙22')">
+                        <img class="compressed-image" src="乙22">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙22</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁22">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙22" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲23</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class "compressed-image-container" onclick="showFullImage('乙23')">
+                        <img class="compressed-image" src="乙23">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙23</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁23">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙23" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲24</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙24')">
+                        <img class="compressed-image" src="乙24">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙24</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁24">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙24" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲25</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙25')">
+                        <img class="compressed-image" src="乙25">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙25</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁25">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙25" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲26</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙26')">
+                        <img class="compressed-image" src="乙26">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙26</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁26">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙26" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲27</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙27')">
+                        <img class="compressed-image" src="乙27">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙27</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁27">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙27" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲28</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙28')">
+                        <img class="compressed-image" src="乙28">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙28</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁28">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙28" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲29</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙29')">
+                        <img class="compressed-image" src="乙29">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙29</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁29">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙29" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲30</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙30')">
+                        <img class="compressed-image" src="乙30">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙30</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁30">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙30" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲31</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙31')">
+                        <img class="compressed-image" src="乙31">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙31</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁31">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙31" download>下載原始尺寸</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="image-description" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>甲32</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <div class="compressed-image-container" onclick="showFullImage('乙32')">
+                        <img class="compressed-image" src="乙32">
+                    </div>
+                </td>
+                <td class="image-description-left" style="background-color: rgba(255, 255, 255, 0.4);">
+                    <p>丙32</p>
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <!-- 新增的列用于显示作者照片 -->
+                    <img class="compressed-image2" src="丁32">
+                </td>
+                <td  style="background-color: rgba(255, 255, 255, 0.4);">
+                    <a class="download-link" href="乙32" download>下載原始尺寸</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="full-image" id="fullImage">
+        <img id="fullImg" src="" alt="大圖">
+    </div>
+
+    <script>
+        function showFullImage(imageSrc) {
+            var fullImage = document.getElementById('fullImage');
+            var fullImg = document.getElementById('fullImg');
+            fullImg.src = imageSrc;
+            fullImage.style.display = 'flex';
+        }
+
+        document.getElementById('fullImage').addEventListener('click', function () {
+            this.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
